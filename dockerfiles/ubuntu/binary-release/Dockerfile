@@ -35,10 +35,10 @@ RUN opam exec -- dune runtest
 RUN opam exec -- dune clean
 RUN opam exec -- dune build --profile release
 RUN echo "\
-\
+\n\
 The binary is now available in <image>:/home/comby/_build/default/src/main.exe.\n\
-If your named the image for this build comby-ubuntu-latest:latest then
+If your named the image for this build comby-ubuntu-latest:latest then\n\
 copy binary to your local directory with:\n\
 \n\
-docker run -v $PWD:/opt/mount --rm --entrypoint cp comby-ubuntu-latest:latest /home/comby/_build/default/src/main.exe /opt/mount/comby.exe
+docker run -v $PWD:/opt/mount --rm --entrypoint cp comby-ubuntu-latest:latest /home/comby/_build/default/src/main.exe /opt/mount/comby.exe\n\
 " 
