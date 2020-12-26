@@ -35,7 +35,7 @@ RUN opam exec -- dune runtest
 RUN opam exec -- dune clean
 RUN opam exec -- dune build --profile release
 RUN echo "\
-
+\
 The binary is now available in <image>:/home/comby/_build/default/src/main.exe.\n\
 If your named the image for this build comby-ubuntu-latest:latest then
 copy binary to your local directory with:\n\

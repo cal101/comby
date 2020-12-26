@@ -9,6 +9,12 @@ let debug =
   Sys.getenv "DEBUG_COMBY"
   |> Option.is_some
 
+let verbose_out_file = "/tmp/comby.out"
+
+let logmsg_to_file msg =
+  Out_channel.with_file ~append:true verbose_out_file ~f:(fun out_channel ->
+      Out_channel.output_lines out_channel [Format.sprintf "    %s%!" msg])
+
 (* skip or continue directory descent *)
 type 'a next =
   | Skip of 'a
@@ -401,10 +407,12 @@ module Printer = struct
           |> String.concat ~sep:"\n"
           |> Format.sprintf "%s\n"
       in
+      logmsg_to_file "Rewrite(?).print";
       let print_if_some output = Option.value_map output ~default:() ~f:(Format.fprintf ppf "%s@.") in
       match output_format with
       | Stdout -> Format.fprintf ppf "%s" rewritten_source
       | Overwrite_file ->
+        logmsg_to_file (Format.sprintf "Rewrite(?).print Overwrite_file reps=%d" (List.length replacements));
         if (replacements <> []) then
           Out_channel.write_all ~data:rewritten_source (Option.value path ~default:"/dev/null")
       | Interactive_review -> () (* Handled after (potentially parallel) processing *)
@@ -792,11 +800,13 @@ let create
       |> fun match_output ->
       Printer.Match.print match_output source_path matches
     | Replacements { source_path; replacements; result; source_content } ->
+      logmsg_to_file (Format.sprintf "command_configuration output_printer Replacements %d" (List.length replacements));
       Printer.Rewrite.convert output_options
       |> fun replacement_output ->
       if match_only && color then
         Printer.Rewrite.print { replacement_output with output_format = Match_only } source_path replacements result source_content
       else
+        logmsg_to_file "command_configuration output_printer replace";
         Printer.Rewrite.print replacement_output source_path replacements result source_content
   in
   let (module M) as matcher, extension = select_matcher custom_matcher override_matcher file_filters omega in

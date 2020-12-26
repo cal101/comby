@@ -78,6 +78,10 @@ let log_to_file path =
   Out_channel.with_file ~append:true verbose_out_file ~f:(fun out_channel ->
       Out_channel.output_lines out_channel [Format.sprintf "Processing %s%!" path])
 
+let logmsg_to_file msg =
+  Out_channel.with_file ~append:true verbose_out_file ~f:(fun out_channel ->
+      Out_channel.output_lines out_channel [Format.sprintf "    %s%!" msg])
+
 let process_single_source
     matcher
     omega
@@ -114,11 +118,13 @@ let process_single_source
       match matches with
       | [] ->
         (* If there are no matches, return the original source (for editor support). *)
+        if verbose then logmsg_to_file "process_single_source: no matches";
         Replacement ([], input_text, 0)
       | matches ->
         match Rewrite.all ~source:input_text ~rewrite_template matches with
         | None -> Nothing
         | Some { rewritten_source; in_place_substitutions } ->
+        if verbose then logmsg_to_file "process_single_source: some matches";
           Replacement (in_place_substitutions, rewritten_source, List.length matches)
   with
   | exn ->
@@ -129,13 +135,15 @@ let output_result output_printer source_path source_content result =
   match result with
   | Nothing -> ()
   | Matches (matches, _) ->
+    (*if verbose then*) logmsg_to_file (Format.sprintf "output_result: 1 output");
     output_printer (Printer.Matches { source_path; matches })
-  | Replacement (replacements, result, _) ->
+  | Replacement (replacements, result, matches) ->
     let source_content =
       match source_content with
       | String content -> content
       | Path path -> In_channel.read_all path
     in
+    (*if verbose then*) logmsg_to_file (Format.sprintf "output_result: 2 output, %d matches" matches);
     output_printer (Printer.Replacements { source_path; replacements; result; source_content })
 
 let with_zip zip_file ~f =
@@ -143,6 +151,11 @@ let with_zip zip_file ~f =
   let result = f zip_in in
   Zip.close_in zip_in;
   result
+
+let get_option some_val =
+  match some_val with
+    | Some a -> a
+    | None -> "";;
 
 let run_on_specifications specifications output_printer process (input : single_source) output_file =
   let result, count =
@@ -157,10 +170,12 @@ let run_on_specifications specifications output_printer process (input : single_
         | Nothing -> Nothing, count
         | Matches (l, number_of_matches) ->
           Matches (l, number_of_matches), count + number_of_matches
+        (*| Replacement (_, _, 0) -> Nothing, count *)
         | Replacement (l, content, number_of_matches) ->
           Replacement (l, content, number_of_matches),
           count + number_of_matches)
   in
+  (*if verbose then*) logmsg_to_file (Format.sprintf "run_on_specifications: output %s" (get_option output_file));
   output_result output_printer output_file input result;
   count
 
