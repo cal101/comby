@@ -78,8 +78,13 @@ let log_to_file path =
   Out_channel.with_file ~append:true verbose_out_file ~f:(fun out_channel ->
       Out_channel.output_lines out_channel [Format.sprintf "Processing %s%!" path])
 
+let debugcal =
+  Sys.getenv "DEBUG_COMBY_CAL"
+  |> Option.is_some
+
 let logmsg_to_file msg =
-  Out_channel.with_file ~append:true verbose_out_file ~f:(fun out_channel ->
+  if debugcal then
+    Out_channel.with_file ~append:true verbose_out_file ~f:(fun out_channel ->
       Out_channel.output_lines out_channel [Format.sprintf "    %s%!" msg])
 
 let process_single_source
@@ -170,12 +175,11 @@ let run_on_specifications specifications output_printer process (input : single_
         | Nothing -> Nothing, count
         | Matches (l, number_of_matches) ->
           Matches (l, number_of_matches), count + number_of_matches
-        (*| Replacement (_, _, 0) -> Nothing, count *)
         | Replacement (l, content, number_of_matches) ->
           Replacement (l, content, number_of_matches),
           count + number_of_matches)
   in
-  (*if verbose then*) logmsg_to_file (Format.sprintf "run_on_specifications: output %s" (get_option output_file));
+  (*if verbose then*) logmsg_to_file (Format.sprintf "run_on_specifications: output %s count %d" (get_option output_file) count);
   output_result output_printer output_file input result;
   count
 

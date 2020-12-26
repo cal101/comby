@@ -9,10 +9,15 @@ let debug =
   Sys.getenv "DEBUG_COMBY"
   |> Option.is_some
 
+let debugcal =
+  Sys.getenv "DEBUG_COMBY_CAL"
+  |> Option.is_some
+
 let verbose_out_file = "/tmp/comby.out"
 
 let logmsg_to_file msg =
-  Out_channel.with_file ~append:true verbose_out_file ~f:(fun out_channel ->
+  if debugcal then
+    Out_channel.with_file ~append:true verbose_out_file ~f:(fun out_channel ->
       Out_channel.output_lines out_channel [Format.sprintf "    %s%!" msg])
 
 (* skip or continue directory descent *)
@@ -407,8 +412,8 @@ module Printer = struct
           |> String.concat ~sep:"\n"
           |> Format.sprintf "%s\n"
       in
-      logmsg_to_file "Rewrite(?).print";
       let print_if_some output = Option.value_map output ~default:() ~f:(Format.fprintf ppf "%s@.") in
+      logmsg_to_file "Rewrite(?).print";
       match output_format with
       | Stdout -> Format.fprintf ppf "%s" rewritten_source
       | Overwrite_file ->
