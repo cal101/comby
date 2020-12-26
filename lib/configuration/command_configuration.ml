@@ -413,15 +413,21 @@ module Printer = struct
           |> Format.sprintf "%s\n"
       in
       let print_if_some output = Option.value_map output ~default:() ~f:(Format.fprintf ppf "%s@.") in
-      logmsg_to_file "Rewrite(?).print";
+      logmsg_to_file (Format.sprintf "command_configuration Rewrite(?).print source %s"
+          (if rewritten_source = source_content then "changed" else "unchanged") 
+      );
       match output_format with
-      | Stdout -> Format.fprintf ppf "%s" rewritten_source
+      | Stdout ->
+        logmsg_to_file (Format.sprintf "command_configuration Rewrite(?).print Stdout reps=%d" (List.length replacements));
+        Format.fprintf ppf "%s" rewritten_source
       | Overwrite_file ->
-        logmsg_to_file (Format.sprintf "Rewrite(?).print Overwrite_file reps=%d" (List.length replacements));
-        if (replacements <> []) then
+        logmsg_to_file (Format.sprintf "command_configuration Rewrite(?).print Overwrite_file reps=%d" (List.length replacements));
+        if (rewritten_source <> source_content) then
           Out_channel.write_all ~data:rewritten_source (Option.value path ~default:"/dev/null")
       | Interactive_review -> () (* Handled after (potentially parallel) processing *)
-      | Diff kind -> print_if_some @@ Diff_configuration.get_diff kind path source_content rewritten_source
+      | Diff kind ->
+        logmsg_to_file (Format.sprintf "command_configuration Rewrite(?).print Stdout reps=%d" (List.length replacements));
+        print_if_some @@ Diff_configuration.get_diff kind path source_content rewritten_source
       | Match_only -> print_if_some @@ Diff_configuration.get_diff Match_only path rewritten_source source_content
       | Json_lines kind ->
         let open Option in
