@@ -40,5 +40,5 @@ The binary is now available in <image>:/home/comby/_build/default/src/main.exe.\
 If your named the image for this build comby-ubuntu-latest:latest then\n\
 copy binary to your local directory with:\n\
 \n\
-docker run -v $PWD:/opt/mount --rm --entrypoint cp comby-ubuntu-latest:latest /home/comby/_build/default/src/main.exe /opt/mount/comby.exe\n\
+docker run -v \$PWD:/opt/mount --rm --entrypoint cp comby-ubuntu-latest:latest /home/comby/_build/default/src/main.exe /opt/mount/comby.exe\n\
 " 
