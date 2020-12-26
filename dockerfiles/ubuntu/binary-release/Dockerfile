@@ -15,20 +15,30 @@ RUN eval $(opam env) && opam repository set-url default https://opam.ocaml.org &
 
 COPY Makefile /home/comby/
 COPY comby.opam /home/comby/
+
+# make a layer before adding source code but with all deps
+RUN eval $(opam env) && opam install . --deps-only -y
+
 COPY dune /home/comby/
 COPY dune-project /home/comby/dune-project
 COPY docs /home/comby/docs
+COPY push-coverage-report.sh /home/comby/
 COPY src /home/comby/src
 COPY lib /home/comby/lib
 COPY test /home/comby/test
-COPY push-coverage-report.sh /home/comby/
 
 RUN sudo chown -R $(whoami) /home/comby
-RUN eval $(opam env) && opam install . --deps-only -y
+#RUN eval $(opam env) && opam install . --deps-only -y
 RUN opam exec -- dune build --profile dev
 RUN make comby comby-server benchmark
 RUN opam exec -- dune runtest
 RUN opam exec -- dune clean
 RUN opam exec -- dune build --profile release
+RUN echo "\
 
-# The binary is now available in /home/comby/_build/default/src/main.exe
+The binary is now available in <image>:/home/comby/_build/default/src/main.exe.\n\
+If your named the image for this build comby-ubuntu-latest:latest then
+copy binary to your local directory with:\n\
+\n\
+docker run -v $PWD:/opt/mount --rm --entrypoint cp comby-ubuntu-latest:latest /home/comby/_build/default/src/main.exe /opt/mount/comby.exe
+" 

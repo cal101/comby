@@ -1,6 +1,6 @@
 open Core
 
-open Polymorphic_compare
+(*open Polymorphic_compare *)
 
 open Match
 
